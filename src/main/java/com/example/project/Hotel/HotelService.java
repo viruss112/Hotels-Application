@@ -1,20 +1,20 @@
 package com.example.project.Hotel;
 
-import GeoIP.GeoIP;
+import com.example.project.Mail.Mail;
 import com.example.project.User.User;
+import com.example.project.User.UserDTO;
+import com.example.project.User.UserRepository;
 import com.maxmind.geoip2.DatabaseReader;
-import com.maxmind.geoip2.exception.GeoIp2Exception;
-import com.maxmind.geoip2.model.CityResponse;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.InetAddress;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -26,14 +26,16 @@ public class HotelService {
 
     private final HotelRepository hotelRepository;
     private final ModelMapper modelMapper;
+    private final UserRepository userRepository;
 
 
     private DatabaseReader dbReader;
 
     @Autowired
-    public HotelService(HotelRepository hotelRepository, ModelMapper modelMapper) {
+    public HotelService(HotelRepository hotelRepository, ModelMapper modelMapper, UserRepository userRepository) {
         this.hotelRepository = hotelRepository;
         this.modelMapper = modelMapper;
+        this.userRepository = userRepository;
     }
 
     public HotelDTO saveHotel(HotelDTO hotelDTO) {
@@ -83,7 +85,7 @@ public class HotelService {
 
             double distance = sqrt(pow(userLatitudeInMeters - hotelLatitudeInMeters, 2) + pow(userLongitudeInMeters - hotelLongitudeInMeters, 2));
             System.out.println(distance);
-            if (distance <= coordinatesDTO.getRadius()*1000) {
+            if (distance <= coordinatesDTO.getRadius() * 1000) {
                 hotelsInRadius.add(hotel);
             }
 
@@ -95,24 +97,46 @@ public class HotelService {
             modelMapper.map(hotel, hotelDTO);
             hotelDTOList.add(hotelDTO);
         }
-        return hotelDTOList;
+
+        List<HotelDTO> availableHotels = getAllHotelsWithAvailableRooms();
+        List<HotelDTO> availableHotelsAndFound = new ArrayList<>();
+
+
+        for (HotelDTO hotelDTO1 : availableHotels) {
+            if (hotelDTOList.contains(hotelDTO1))
+                availableHotelsAndFound.add(hotelDTO1);
+        }
+
+
+        return availableHotelsAndFound;
     }
 
-    public HotelDTO updateRooms(HotelDTO hotelDTO, Integer hotelId) {
+    public HotelDTO updateRooms(HotelDTO hotelDTO, Integer hotelId, Integer userId) throws NoSuchPaddingException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
 
         Optional<Hotel> hotel = hotelRepository.findById(hotelId);
-         hotel.get().setSingleRooms(hotelDTO.getSingleRooms());
-         hotel.get().setDoubleRooms(hotelDTO.getDoubleRooms());
-         hotel.get().setSuiteRooms(hotelDTO.getSuiteRooms());
+        hotel.get().setSingleRooms(hotelDTO.getSingleRooms());
+        hotel.get().setDoubleRooms(hotelDTO.getDoubleRooms());
+        hotel.get().setSuiteRooms(hotelDTO.getSuiteRooms());
 
-         HotelDTO hotelDTO1 = new HotelDTO();
-        Hotel savedHotel= hotelRepository.save(hotel.get());
-         modelMapper.map(savedHotel,hotelDTO1);
-         return hotelDTO1;
+        HotelDTO hotelDTO1 = new HotelDTO();
+        Hotel savedHotel = hotelRepository.save(hotel.get());
+        modelMapper.map(savedHotel, hotelDTO1);
+        Optional<User> user = userRepository.findById(userId);
+        Mail.sendEmail(hotel, user.get());
+        return hotelDTO1;
 
     }
 
+    public List<HotelDTO> getAllHotelsWithAvailableRooms() {
 
+        List<Hotel> hotelList = hotelRepository.getAllHotelsWithAvailableRooms();
+        List<HotelDTO> hotelDTOList = new ArrayList<>();
 
-
+        for (Hotel hotel : hotelList) {
+            HotelDTO hotelDTO = new HotelDTO();
+            modelMapper.map(hotel, hotelDTO);
+            hotelDTOList.add(hotelDTO);
+        }
+        return hotelDTOList;
+    }
 }

@@ -1,9 +1,11 @@
 package com.example.project.Hotel;
 
+import com.example.project.Reservation.Reservation;
 import com.sun.istack.NotNull;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -35,6 +37,9 @@ public class Hotel {
     @Column(name = "longitude")
     private double longitude;
 
+    @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY)
+    private List<Reservation> reservationList;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -46,11 +51,12 @@ public class Hotel {
                 Objects.equals(hotelName, hotel.hotelName) &&
                 Objects.equals(singleRooms, hotel.singleRooms) &&
                 Objects.equals(doubleRooms, hotel.doubleRooms) &&
-                Objects.equals(suiteRooms, hotel.suiteRooms);
+                Objects.equals(suiteRooms, hotel.suiteRooms) &&
+                Objects.equals(reservationList, hotel.reservationList);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(hotelId, hotelName, singleRooms, doubleRooms, suiteRooms, latitude, longitude);
+        return Objects.hash(hotelId, hotelName, singleRooms, doubleRooms, suiteRooms, latitude, longitude, reservationList);
     }
 }

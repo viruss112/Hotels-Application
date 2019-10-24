@@ -54,7 +54,7 @@ public class UserService {
         User savedUser = userRepository.save(user);
         UserDTO userDTO1 = new UserDTO();
         modelMapper.map(savedUser, userDTO1);
-        mail.sendEmail(savedUser);
+       // mail.sendEmail(user,savedUser);
         return userDTO1;
 
     }
