@@ -2,12 +2,20 @@ package com.example.project.Reservation;
 
 import com.example.project.Hotel.Hotel;
 import com.example.project.Hotel.HotelRepository;
+import com.example.project.Mail.Mail;
 import com.example.project.User.User;
 import com.example.project.User.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.transaction.Transactional;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 
 @Service
@@ -18,15 +26,17 @@ public class ReservationService {
     private final HotelRepository hotelRepository;
     private  final UserRepository userRepository;
 
+
     @Autowired
     public ReservationService(ModelMapper modelMapper, ReservationRepository reservationRepository, HotelRepository hotelRepository, UserRepository userRepository) {
         this.modelMapper = modelMapper;
         this.reservationRepository = reservationRepository;
         this.hotelRepository = hotelRepository;
         this.userRepository = userRepository;
-    }
 
-    public ReservationDTO saveReservation(Integer userId,ReservationDTO reservationDTO,Integer hotelId){
+    }
+    @Transactional(rollbackOn = Exception.class)
+    public ReservationDTO saveReservation(Integer userId,ReservationDTO reservationDTO,Integer hotelId) throws NoSuchPaddingException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
 
         Reservation reservation = new Reservation();
         Optional<User> user = userRepository.findById(userId);
@@ -47,13 +57,13 @@ public class ReservationService {
         }
 
         hotelRepository.save(hotel.get());
-
+        Mail.sendEmail(reservation,user.get());
 
 
         return reservationDTO1;
 
     }
-
+    @Transactional(rollbackOn = Exception.class)
     public ReservationDTO deleteReservation(Integer userId){
 
         Reservation reservation = reservationRepository.getReservationsByUserId(userId);
@@ -75,7 +85,7 @@ public class ReservationService {
         return reservationDTO;
 
     }
-
+    @Transactional(rollbackOn = Exception.class)
     public ReservationDTO updateDates(Integer userId, ReservationDTO reservationDTO) {
 
         Reservation reservation = reservationRepository.getReservationsByUserId(userId);

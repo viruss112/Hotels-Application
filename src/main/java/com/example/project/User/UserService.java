@@ -6,6 +6,7 @@ import com.example.project.Mail.Mail;
 import com.example.project.Utilities.Utilities;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.BadPaddingException;
@@ -51,6 +52,7 @@ public class UserService {
         user.setEmail(encryptionUtil.encrypt(userDTO.getEmail()));
         UUID uuid = UUID.randomUUID();
         user.setToken(encryptionUtil.encrypt(uuid.toString()));
+        user.setRoles("USER");
         User savedUser = userRepository.save(user);
         UserDTO userDTO1 = new UserDTO();
         modelMapper.map(savedUser, userDTO1);
@@ -115,6 +117,32 @@ public class UserService {
         userDTO1.setPassword(encryptionUtil.decrypt(user.getPassword()));
         userDTO1.setToken(encryptionUtil.decrypt(user.getToken()));
         return userDTO1;
+
+
+    }
+
+    public UserDTO getUserByUserName(UserDTO userDTO) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, UnsupportedEncodingException {
+
+        String email= encryptionUtil.encrypt(userDTO.getEmail());
+        User user = userRepository.getUserByEmail(email);
+        UserDTO userDTO1 = new UserDTO();
+        userDTO1.setEmail(encryptionUtil.decrypt(user.getEmail()));
+        userDTO1.setPassword(encryptionUtil.decrypt(user.getPassword()));
+        userDTO1.setToken(encryptionUtil.decrypt(user.getToken()));
+        return userDTO1;
+
+
+    }
+
+    public UserDTO getUserByUserName(String userEmail) throws Exception {
+
+        String email= encryptionUtil.encrypt(userEmail);
+        User user = userRepository.getUserByEmail(email);
+        UserDTO userDTO1 = new UserDTO();
+        userDTO1.setEmail(encryptionUtil.decrypt(user.getEmail()));
+        userDTO1.setPassword(encryptionUtil.decrypt(user.getPassword()));
+        userDTO1.setToken(encryptionUtil.decrypt(user.getToken()));
+        return  userDTO1;
 
 
     }

@@ -33,6 +33,12 @@ public class User {
     @Column(name = "token")
     private String token;
 
+    @Column(name = "roles")
+    private String roles;
+
+    @Column(name = "is_active")
+    private boolean isActive;
+
     @OneToMany(mappedBy = "user" ,fetch = FetchType.LAZY)
     private List<Reservation> reservationList;
 

@@ -15,7 +15,7 @@ public class ReservationController {
     }
 
     @PostMapping("/create/{userId}/{hotelId}")
-    public ReservationDTO saveReservation(@PathVariable Integer userId, @RequestBody ReservationDTO reservationDTO, @PathVariable Integer hotelId){
+    public ReservationDTO saveReservation (@PathVariable Integer userId, @RequestBody ReservationDTO reservationDTO, @PathVariable Integer hotelId) throws Exception{
         return reservationService.saveReservation(userId,reservationDTO,hotelId);
     }
 
