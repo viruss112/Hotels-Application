@@ -1,24 +1,13 @@
 package com.example.project.Hotel;
 
-import com.example.project.Mail.Mail;
-import com.example.project.User.User;
-import com.example.project.User.UserDTO;
-import com.example.project.User.UserRepository;
-import com.maxmind.geoip2.DatabaseReader;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import javax.transaction.Transactional;
+import javax.validation.ValidationException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import static java.lang.Math.*;
 
 @Service
@@ -26,18 +15,16 @@ public class HotelService {
 
     private final HotelRepository hotelRepository;
     private final ModelMapper modelMapper;
-    private final UserRepository userRepository;
 
-
-    private DatabaseReader dbReader;
 
     @Autowired
-    public HotelService(HotelRepository hotelRepository, ModelMapper modelMapper, UserRepository userRepository) {
+    public HotelService(HotelRepository hotelRepository, ModelMapper modelMapper) {
         this.hotelRepository = hotelRepository;
         this.modelMapper = modelMapper;
-        this.userRepository = userRepository;
+
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public HotelDTO saveHotel(HotelDTO hotelDTO) {
 
         Hotel hotel = new Hotel();
@@ -48,6 +35,7 @@ public class HotelService {
         return hotelDTO1;
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public HotelDTO getHotel(Integer hotelId) {
 
         Optional<Hotel> hotel = hotelRepository.findById(hotelId);
@@ -57,6 +45,7 @@ public class HotelService {
 
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public List<HotelDTO> getAllHotels() {
 
         List<Hotel> hotelList = (List<Hotel>) hotelRepository.findAll();
@@ -71,6 +60,7 @@ public class HotelService {
 
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public List<HotelDTO> getHotelsByCoordinates(CoordinatesDTO coordinatesDTO) {
 
         List<Hotel> hotelList = (List<Hotel>) hotelRepository.findAll();
@@ -108,25 +98,15 @@ public class HotelService {
         }
 
 
-        return availableHotelsAndFound;
-    }
+        if (!availableHotelsAndFound.isEmpty())
+            return availableHotelsAndFound;
+        else
+            throw new ValidationException("No hotels available!");
 
-    public HotelDTO updateRooms(HotelDTO hotelDTO, Integer hotelId, Integer userId) throws NoSuchPaddingException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
-
-        Optional<Hotel> hotel = hotelRepository.findById(hotelId);
-        hotel.get().setSingleRooms(hotelDTO.getSingleRooms());
-        hotel.get().setDoubleRooms(hotelDTO.getDoubleRooms());
-        hotel.get().setSuiteRooms(hotelDTO.getSuiteRooms());
-
-        HotelDTO hotelDTO1 = new HotelDTO();
-        Hotel savedHotel = hotelRepository.save(hotel.get());
-        modelMapper.map(savedHotel, hotelDTO1);
-        Optional<User> user = userRepository.findById(userId);
-        Mail.sendEmail(hotel, user.get());
-        return hotelDTO1;
 
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public List<HotelDTO> getAllHotelsWithAvailableRooms() {
 
         List<Hotel> hotelList = hotelRepository.getAllHotelsWithAvailableRooms();
@@ -139,4 +119,34 @@ public class HotelService {
         }
         return hotelDTOList;
     }
+
+    @Transactional(rollbackOn = Exception.class)
+    public List<HotelDTO> getHotelsByRegion(RegionDTO regionDTO)  {
+
+        List<Hotel> hotelList = hotelRepository.getAllHotelsByRegion(regionDTO.getRegion());
+        List<HotelDTO> hotelDTOList = new ArrayList<>();
+        for (Hotel hotel : hotelList) {
+            HotelDTO hotelDTO = new HotelDTO();
+            modelMapper.map(hotel, hotelDTO);
+            hotelDTOList.add(hotelDTO);
+        }
+
+        List<HotelDTO> availableHotels = getAllHotelsWithAvailableRooms();
+        List<HotelDTO> availableHotelsFound = new ArrayList<>();
+
+
+        for (HotelDTO hotelDTO1 : availableHotels) {
+            if (hotelDTOList.contains(hotelDTO1))
+                availableHotelsFound.add(hotelDTO1);
+        }
+
+        if (!availableHotelsFound.isEmpty())
+            return availableHotelsFound;
+        else
+            throw new ValidationException("No hotels available!");
+
+
+    }
+
+
 }

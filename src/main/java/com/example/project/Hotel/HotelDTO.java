@@ -16,6 +16,7 @@ public class HotelDTO {
     private Integer singleRooms;
     private Integer doubleRooms;
     private Integer suiteRooms;
+    private String region;
 
     @Override
     public boolean equals(Object o) {
@@ -28,11 +29,12 @@ public class HotelDTO {
                 Objects.equals(hotelName, hotelDTO.hotelName) &&
                 Objects.equals(singleRooms, hotelDTO.singleRooms) &&
                 Objects.equals(doubleRooms, hotelDTO.doubleRooms) &&
-                Objects.equals(suiteRooms, hotelDTO.suiteRooms);
+                Objects.equals(suiteRooms, hotelDTO.suiteRooms) &&
+                Objects.equals(region, hotelDTO.region);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(hotelId, hotelName, latitude, longitude, singleRooms, doubleRooms, suiteRooms);
+        return Objects.hash(hotelId, hotelName, latitude, longitude, singleRooms, doubleRooms, suiteRooms, region);
     }
 }

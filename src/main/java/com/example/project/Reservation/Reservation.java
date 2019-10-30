@@ -37,4 +37,14 @@ public class Reservation {
     @JoinColumn(name = "hotel_id",nullable = false)
     private Hotel hotel;
 
+    public Reservation(Date reservationFromDate, RoomType roomType, Date reservationToDate, User user, Hotel hotel) {
+        this.reservationFromDate = reservationFromDate;
+        this.roomType = roomType;
+        this.reservationToDate = reservationToDate;
+        this.user = user;
+        this.hotel = hotel;
+    }
+
+    public Reservation() {
+    }
 }

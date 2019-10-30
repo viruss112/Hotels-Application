@@ -1,9 +1,10 @@
 package com.example.project.User;
 
+import com.example.project.Feedback.Feedback;
 import com.example.project.Reservation.Reservation;
+import com.example.project.Role.Role;
 import com.sun.istack.NotNull;
 import lombok.Data;
-
 import javax.persistence.*;
 import java.util.List;
 import java.util.Objects;
@@ -33,14 +34,14 @@ public class User {
     @Column(name = "token")
     private String token;
 
-    @Column(name = "roles")
-    private String roles;
-
-    @Column(name = "is_active")
-    private boolean isActive;
-
     @OneToMany(mappedBy = "user" ,fetch = FetchType.LAZY)
     private List<Reservation> reservationList;
+
+    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY)
+    private List<Role> roleList;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<Feedback> feedbackList;
 
     @Override
     public boolean equals(Object o) {
@@ -53,11 +54,19 @@ public class User {
                 Objects.equals(email, user.email) &&
                 Objects.equals(password, user.password) &&
                 Objects.equals(token, user.token) &&
-                Objects.equals(reservationList, user.reservationList);
+                Objects.equals(reservationList, user.reservationList) &&
+                Objects.equals(roleList, user.roleList);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId, firstName, lastName, email, password, token, reservationList);
+        return Objects.hash(userId, firstName, lastName, email, password, token, reservationList, roleList);
+    }
+
+    public User(String email) {
+        this.email = email;
+    }
+
+    public User() {
     }
 }

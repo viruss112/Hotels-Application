@@ -3,6 +3,8 @@ package com.example.project.Reservation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequestMapping("/reservation")
 @RestController
 public class ReservationController {
@@ -27,6 +29,11 @@ public class ReservationController {
     @PatchMapping("/update-dates/{userId}")
     public ReservationDTO updateDates(@PathVariable Integer userId,@RequestBody ReservationDTO reservationDTO){
         return reservationService.updateDates(userId,reservationDTO);
+    }
+
+    @GetMapping("/get-all")
+    public List<ReservationDTO> getAll(){
+        return reservationService.getAll();
     }
 
 }

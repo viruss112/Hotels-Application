@@ -15,7 +15,6 @@ public class UserDTO {
     private String email;
     private String password;
     private String token;
-    private boolean isActive;
     private String roles;
 
     @Override
@@ -23,8 +22,7 @@ public class UserDTO {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserDTO userDTO = (UserDTO) o;
-        return isActive == userDTO.isActive &&
-                Objects.equals(userId, userDTO.userId) &&
+        return Objects.equals(userId, userDTO.userId) &&
                 Objects.equals(firstName, userDTO.firstName) &&
                 Objects.equals(lastName, userDTO.lastName) &&
                 Objects.equals(email, userDTO.email) &&
@@ -35,6 +33,6 @@ public class UserDTO {
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId, firstName, lastName, email, password, token, isActive, roles);
+        return Objects.hash(userId, firstName, lastName, email, password, token, roles);
     }
 }

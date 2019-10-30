@@ -1,46 +1,40 @@
 package com.example.project.Mail;
 
-import com.example.project.EncryptionUtil.EncryptionUtil;
-import com.example.project.Hotel.Hotel;
 import com.example.project.Reservation.Reservation;
 import com.example.project.User.User;
+import com.example.project.User.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.LocalDate;
 
 @Component
 public class Mail  {
 
-    private static EncryptionUtil encryptionUtil ;
+
     private static JavaMailSender javaMailSender ;
 
+
     @Autowired
-    public Mail(EncryptionUtil encryptionUtil, JavaMailSender javaMailSender) {
-        this.encryptionUtil = encryptionUtil;
+    public Mail(JavaMailSender javaMailSender) {
         this.javaMailSender = javaMailSender;
     }
 
 
-    public static <T> void sendEmail(T scope, User user) throws NoSuchPaddingException, UnsupportedEncodingException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+    public static <T> void sendEmail(T scope, User user) {
         SimpleMailMessage mail = new SimpleMailMessage();
 
 
-        mail.setTo(encryptionUtil.decrypt(user.getEmail()));
+        mail.setTo(user.getEmail());
         mail.setFrom("vld.muri96@yahoo.com");
         if(scope instanceof User){
             mail.setSubject("Registration email");
             mail.setText("Your acount was succesfull registered \n " +
-                    "username:"+ encryptionUtil.decrypt(user.getEmail())+"\n"+
-                    "password:"+ encryptionUtil.decrypt(user.getPassword())+"\n"+
+                    "username:"+ user.getEmail()+"\n"+
+//                    "password:"+ user.getPassword()+"\n"+
                     "Good luck!");
         }
         else
@@ -53,6 +47,26 @@ public class Mail  {
 
 
         javaMailSender.send(mail);
+
+    }
+
+    public static void NotificationEmail(Reservation reservation){
+
+
+        LocalDate localDate = LocalDate.now();
+        LocalDate localDate1= reservation.getReservationFromDate().toLocalDate();
+        if(Duration.between(localDate1.atStartOfDay(),localDate.atStartOfDay()).toDays()==1){
+            SimpleMailMessage mail = new SimpleMailMessage();
+            mail.setTo(reservation.getUser().getEmail());
+            mail.setFrom("vld.muri96@yahoo.com");
+            mail.setSubject("Reservation");
+            mail.setText("Hello "+reservation.getUser().getFirstName()+" tomorrow you'll have a reservation at hotel "+reservation.getHotel().getHotelName()+" from "+ reservation.getReservationFromDate()+ " to "+
+                    reservation.getReservationToDate());
+
+            javaMailSender.send(mail);
+        }
+
+
 
     }
 

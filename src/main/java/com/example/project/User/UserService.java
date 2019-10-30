@@ -1,21 +1,12 @@
 package com.example.project.User;
 
-import com.example.project.EncryptionUtil.EncryptionUtil;
-import com.example.project.Hotel.HotelService;
 import com.example.project.Mail.Mail;
 import com.example.project.Utilities.Utilities;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.transaction.Transactional;
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -29,30 +20,29 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
-    private final EncryptionUtil encryptionUtil;
     private final Mail mail;
+    private final PasswordEncoder passwordEncoder;
 
 
 
     @Autowired
-    public UserService(UserRepository userRepository, ModelMapper modelMapper, EncryptionUtil encryptionUtil, HotelService hotelService, Mail mail) {
+    public UserService(UserRepository userRepository, ModelMapper modelMapper, Mail mail, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
-        this.encryptionUtil = encryptionUtil;
         this.mail = mail;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional(rollbackOn = Exception.class)
-    public UserDTO saveUser(UserDTO userDTO) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, UnsupportedEncodingException {
+    public UserDTO saveUser(UserDTO userDTO)  {
 
         User user = new User();
         modelMapper.map(userDTO, user);
         validate(user);
-        user.setPassword(encryptionUtil.encrypt(userDTO.getPassword()));
-        user.setEmail(encryptionUtil.encrypt(userDTO.getEmail()));
+        user.setEmail(userDTO.getEmail());
         UUID uuid = UUID.randomUUID();
-        user.setToken(encryptionUtil.encrypt(uuid.toString()));
-        user.setRoles("USER");
+        user.setToken(uuid.toString());
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         User savedUser = userRepository.save(user);
         UserDTO userDTO1 = new UserDTO();
         modelMapper.map(savedUser, userDTO1);
@@ -77,75 +67,35 @@ public class UserService {
 
     }
 
-    public UserDTO getUser(Integer userId) throws NoSuchPaddingException, UnsupportedEncodingException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+    public UserDTO getUser(Integer userId) {
 
         Optional<User> user = userRepository.findById(userId);
         UserDTO userDTO = new UserDTO();
         modelMapper.map(user.get(), userDTO);
-        userDTO.setEmail(encryptionUtil.decrypt(user.get().getEmail()));
-        userDTO.setPassword(encryptionUtil.decrypt(user.get().getPassword()));
-        userDTO.setToken(encryptionUtil.decrypt(user.get().getToken()));
-
         return userDTO;
 
     }
 
-    public List<UserDTO> getAll() throws NoSuchPaddingException, UnsupportedEncodingException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+    public List<UserDTO> getAll() {
 
         List<User> userList = (List<User>) userRepository.findAll();
         List<UserDTO> userDTOList = new ArrayList<>();
         for (User user : userList) {
             UserDTO userDTO = new UserDTO();
             modelMapper.map(user, userDTO);
-            userDTO.setEmail(encryptionUtil.decrypt(user.getEmail()));
-            userDTO.setPassword(encryptionUtil.decrypt(user.getPassword()));
-            userDTO.setToken(encryptionUtil.decrypt(user.getToken()));
             userDTOList.add(userDTO);
         }
         return userDTOList;
     }
 
-    public UserDTO login(UserDTO userDTO) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, UnsupportedEncodingException {
 
-        String email= encryptionUtil.encrypt(userDTO.getEmail());
-        String password = encryptionUtil.encrypt(userDTO.getPassword());
-
-        User user = userRepository.getUserByCredentials(email, password);
-        UserDTO userDTO1 = new UserDTO();
-        modelMapper.map(user, userDTO1);
-        userDTO1.setEmail(encryptionUtil.decrypt(user.getEmail()));
-        userDTO1.setPassword(encryptionUtil.decrypt(user.getPassword()));
-        userDTO1.setToken(encryptionUtil.decrypt(user.getToken()));
-        return userDTO1;
-
+    public User getUserByUserName(String userEmail) {
+            User user = userRepository.getUserByEmail(userEmail);
+            return user;
 
     }
 
-    public UserDTO getUserByUserName(UserDTO userDTO) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, UnsupportedEncodingException {
 
-        String email= encryptionUtil.encrypt(userDTO.getEmail());
-        User user = userRepository.getUserByEmail(email);
-        UserDTO userDTO1 = new UserDTO();
-        userDTO1.setEmail(encryptionUtil.decrypt(user.getEmail()));
-        userDTO1.setPassword(encryptionUtil.decrypt(user.getPassword()));
-        userDTO1.setToken(encryptionUtil.decrypt(user.getToken()));
-        return userDTO1;
-
-
-    }
-
-    public UserDTO getUserByUserName(String userEmail) throws Exception {
-
-        String email= encryptionUtil.encrypt(userEmail);
-        User user = userRepository.getUserByEmail(email);
-        UserDTO userDTO1 = new UserDTO();
-        userDTO1.setEmail(encryptionUtil.decrypt(user.getEmail()));
-        userDTO1.setPassword(encryptionUtil.decrypt(user.getPassword()));
-        userDTO1.setToken(encryptionUtil.decrypt(user.getToken()));
-        return  userDTO1;
-
-
-    }
 
 
 

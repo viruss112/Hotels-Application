@@ -37,6 +37,9 @@ public class Hotel {
     @Column(name = "longitude")
     private double longitude;
 
+    @Column(name = "region")
+    private String region;
+
     @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY)
     private List<Reservation> reservationList;
 
@@ -58,5 +61,12 @@ public class Hotel {
     @Override
     public int hashCode() {
         return Objects.hash(hotelId, hotelName, singleRooms, doubleRooms, suiteRooms, latitude, longitude, reservationList);
+    }
+
+    public Hotel(String hotelName) {
+        this.hotelName = hotelName;
+    }
+
+    public Hotel() {
     }
 }
